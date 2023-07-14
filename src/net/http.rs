@@ -47,6 +47,7 @@ use crate::net::atlas::Attachment;
 use crate::net::ClientError;
 use crate::net::Error as net_error;
 use crate::net::Error::ClarityError;
+use crate::net::ErrorResponse;
 use crate::net::ExtendedStacksHeader;
 use crate::net::HttpContentType;
 use crate::net::HttpRequestMetadata;
@@ -3190,16 +3191,18 @@ impl HttpResponseType {
         fd.read_to_string(&mut error_text)
             .map_err(net_error::ReadError)?;
 
+        let error_response = ErrorResponse { error: error_text };
+
         let md = HttpResponseMetadata::from_preamble(request_version, preamble);
         let resp = match preamble.status_code {
-            400 => HttpResponseType::BadRequest(md, error_text),
-            401 => HttpResponseType::Unauthorized(md, error_text),
-            402 => HttpResponseType::PaymentRequired(md, error_text),
-            403 => HttpResponseType::Forbidden(md, error_text),
-            404 => HttpResponseType::NotFound(md, error_text),
-            500 => HttpResponseType::ServerError(md, error_text),
-            503 => HttpResponseType::ServiceUnavailable(md, error_text),
-            _ => HttpResponseType::Error(md, preamble.status_code, error_text),
+            400 => HttpResponseType::BadRequest(md, error_response),
+            401 => HttpResponseType::Unauthorized(md, error_response),
+            402 => HttpResponseType::PaymentRequired(md, error_response),
+            403 => HttpResponseType::Forbidden(md, error_response),
+            404 => HttpResponseType::NotFound(md, error_response),
+            500 => HttpResponseType::ServerError(md, error_response),
+            503 => HttpResponseType::ServiceUnavailable(md, error_response),
+            _ => HttpResponseType::Error(md, preamble.status_code, error_response),
         };
         Ok(resp)
     }
@@ -3975,7 +3978,7 @@ impl HttpResponseType {
         &self,
         fd: &mut W,
         code: u16,
-        message: &str,
+        message: &ErrorResponse,
     ) -> Result<(), net_error> {
         let md = self.metadata();
         HttpResponsePreamble::new_serialized(

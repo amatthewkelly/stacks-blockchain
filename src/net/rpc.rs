@@ -61,6 +61,7 @@ use crate::net::p2p::PeerNetwork;
 use crate::net::relay::Relayer;
 use crate::net::BlocksDatum;
 use crate::net::Error as net_error;
+use crate::net::ErrorResponse;
 use crate::net::HttpRequestMetadata;
 use crate::net::HttpRequestType;
 use crate::net::HttpResponseMetadata;
@@ -786,7 +787,9 @@ impl ConversationHttp {
                 debug!("Chain tip not found during get PoX info: {:?}", req);
                 let response = HttpResponseType::NotFound(
                     response_metadata,
-                    "Failed to find chain tip".to_string(),
+                    ErrorResponse {
+                        error: "Failed to find chain tip".to_string(),
+                    },
                 );
                 response.send(http, fd)
             }
@@ -794,7 +797,9 @@ impl ConversationHttp {
                 warn!("Failed to get PoX info {:?}: {:?}", req, &e);
                 let response = HttpResponseType::ServerError(
                     response_metadata,
-                    "Failed to query peer info".to_string(),
+                    ErrorResponse {
+                        error: "Failed to query peer info".to_string(),
+                    },
                 );
                 response.send(http, fd)
             }

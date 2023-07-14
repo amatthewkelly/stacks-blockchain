@@ -1327,6 +1327,11 @@ pub struct GetAttachmentResponse {
     pub attachment: Attachment,
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct ErrorResponse {
+    error: String,
+}
+
 impl Serialize for GetAttachmentResponse {
     fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
         let hex_encoded = to_hex(&self.attachment.content[..]);
@@ -1645,15 +1650,16 @@ pub enum HttpResponseType {
     OptionsPreflight(HttpResponseMetadata),
     TransactionFeeEstimation(HttpResponseMetadata, RPCFeeEstimateResponse),
     // peer-given error responses
-    BadRequest(HttpResponseMetadata, String),
+    BadRequest(HttpResponseMetadata, ErrorResponse),
     BadRequestJSON(HttpResponseMetadata, serde_json::Value),
-    Unauthorized(HttpResponseMetadata, String),
-    PaymentRequired(HttpResponseMetadata, String),
-    Forbidden(HttpResponseMetadata, String),
-    NotFound(HttpResponseMetadata, String),
-    ServerError(HttpResponseMetadata, String),
-    ServiceUnavailable(HttpResponseMetadata, String),
-    Error(HttpResponseMetadata, u16, String),
+    Unauthorized(HttpResponseMetadata, ErrorResponse),
+    PaymentRequired(HttpResponseMetadata, ErrorResponse),
+    Forbidden(HttpResponseMetadata, ErrorResponse),
+    NotFound(HttpResponseMetadata, ErrorResponse),
+    /// this needs to take a ErrorResponse
+    ServerError(HttpResponseMetadata, ErrorResponse),
+    ServiceUnavailable(HttpResponseMetadata, ErrorResponse),
+    Error(HttpResponseMetadata, u16, ErrorResponse),
 }
 
 #[derive(Debug, Clone, PartialEq, Copy)]
